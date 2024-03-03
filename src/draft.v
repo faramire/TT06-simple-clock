@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2024 Fabio Ramirez Stern
+ * Copyright (c) 2024 Fabio Ramirez Stern
  * SPDX-License-Identifier: Apache-2.0
  */
 
