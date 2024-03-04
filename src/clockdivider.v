@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Fabio Ramirez Stern
  * SPDX-License-Identifier: Apache-2.0
  ******************************************************
- * Divides the 1 MHz clock to a 10 Hz clock
+ * Divides the 1 MHz clock to a 100 Hz clock
  */
 
 `define default_netname none
@@ -14,7 +14,7 @@
     output wire clk_out
  );
     reg[16:0] counter =      0;
-    parameter div     = 100000; // 1 MHz / 100'000 = 10 Hz
+    parameter div     = 10000; // 1 MHz / 10'000 = 10 Hz
 
     always @(posedge clk_in or res) begin
         if (!res) begin     // async reset
