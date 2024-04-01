@@ -3,7 +3,7 @@ project:
   title:        "Simple Stopwatch"      # Project title
   author:       "Fabio Ramirez Stern"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A simple stopwatch counting in 100th seconds and outputing it via SPI for the MAX7219 chip."      # One line description of what your project does
+  description:  "A simple stopwatch counting in 100th seconds and outputing it via SPI to a MAX7219 chip controlling an 8 digit 7-segment display." # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     1000000  # Clock frequency in Hz (or 0 if not applicable)
 

@@ -12,10 +12,10 @@
     input  wire       ena, // enable
     input  wire       res, // reset
     output wire       max, // high when max value (10) reached
-    output wire [2:0] cnt  // 3 bit counter output
+    output wire [3:0] cnt  // 4 bit counter output
  )
 
-    reg[2:0] counter    = 0;
+    reg[3:0] counter    = 0;
     parameter max_count = 10;
 
     always @(posedge clk_in or res) begin

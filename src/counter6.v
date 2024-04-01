@@ -15,7 +15,7 @@
     output wire [2:0] cnt  // 3 bit counter output
  )
 
-    reg[2:0] counter    = 0;
+    reg[2:0]  counter   = 0;
     parameter max_count = 6;
 
     always @(posedge clk_in or res) begin
