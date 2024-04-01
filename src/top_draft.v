@@ -33,12 +33,48 @@ module tt_um_faramire_lcd_stopwatch_draft (
   wire [3:0] ces_X0;
   wire [3:0] ces_0X;
 
-  clockDivider inst1 (
+  clockDivider inst1 ( // divides the 100 MHz clock to 100 Hz
     .clk_in  (clk),
     .res     (rst_n),
     .clk_out (dividedClock)
   );
 
+  controller inst1 ( // two latches for starting/stopping and lap times
+    .res        (rst_n),
+    .start_stop (ui_in[0]),
+    .lap_time   (ui_in[1]),
+    .counter_enable (counter_enable),
+    .display_enable (display_enable)
+  );
 
+  assign uo_out[3] = counter_enable; // output the internal state
+  assign uo_out[4] = display_enable;
+
+  counter_chain inst1 ( // a chain of 6 counters that count from 00:00:00 to 59:59:99
+    .clk (dividedClock),
+    .ena (counter_enable),
+    .res (rst_n),
+    .min_X0 (min_X0)
+    .min_0X (min_0X),
+    .sec_X0 (sec_X0),
+    .sec_0X (sec_0X),
+    .ces_X0 (ces_X0),
+    .ces_0X (ces_0X)
+  );
+
+  SPI_driver inst1 ( // drives the 7-segment displays connected via a MAX7219 chip over SPI
+    .clk (clk),
+    .res (res),
+    .ena (display_enable),
+    .min_X0 (min_X0)
+    .min_0X (min_0X),
+    .sec_X0 (sec_X0),
+    .sec_0X (sec_0X),
+    .ces_X0 (ces_X0),
+    .ces_0X (ces_0X),
+    .MOSI    (uo_out[0]),
+    .CS      (uo_out[1]),
+    .clk_SPI (uo_out[2])
+  );
 
 endmodule

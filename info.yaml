@@ -20,8 +20,8 @@ project:
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
   # Inputs
-  ui[0]: ""
-  ui[1]: ""
+  ui[0]: "start/stop"
+  ui[1]: "lap time"
   ui[2]: ""
   ui[3]: ""
   ui[4]: ""
@@ -30,11 +30,11 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
+  uo[0]: "SPI MOSI"
+  uo[1]: "SPI CS (active low)"
+  uo[2]: "SPI CLK"
+  uo[3]: "stopwatch enabled (counting up)"
+  uo[4]: "display enabled (goes low when showing lap time)"
   uo[5]: ""
   uo[6]: ""
   uo[7]: ""
