@@ -25,6 +25,12 @@ module tt_um_faramire_stopwatch (
   wire dividedClock; // 100 Hz clock
   wire counter_enable;
   wire display_enable;
+  wire reset_either; // an OR of the input reset and the chip wide reset, for those that shall be affected by both
+  wire clock_enable; // and AND of the clock with the counter enable,
+                     // so that the clock divider doesn't advance when the counters are halted
+
+  assign reset_either = rst_n | (~ui_in[2]);
+  assign clock_enable = counter_enable & clk;
 
   wire [2:0] min_X0; // all the results of the counter chain
   wire [3:0] min_0X;
@@ -34,8 +40,8 @@ module tt_um_faramire_stopwatch (
   wire [3:0] ces_0X;
 
   clockDivider inst1 ( // divides the 100 MHz clock to 100 Hz
-    .clk_in  (clk),
-    .res     (rst_n),
+    .clk_in  (clock_enable),
+    .res     (reset_either),
     .clk_out (dividedClock)
   );
 
@@ -53,7 +59,7 @@ module tt_um_faramire_stopwatch (
   counter_chain inst1 ( // a chain of 6 counters that count from 00:00:00 to 59:59:99
     .clk (dividedClock),
     .ena (counter_enable),
-    .res (rst_n),
+    .res (reset_either),
     .min_X0 (min_X0)
     .min_0X (min_0X),
     .sec_X0 (sec_X0),
@@ -64,7 +70,7 @@ module tt_um_faramire_stopwatch (
 
   SPI_driver inst1 ( // drives the 7-segment displays connected via a MAX7219 chip over SPI
     .clk (clk),
-    .res (res),
+    .res (rst_n),
     .ena (display_enable),
     .min_X0 (min_X0)
     .min_0X (min_0X),

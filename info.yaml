@@ -22,7 +22,7 @@ pinout:
   # Inputs
   ui[0]: "start/stop"
   ui[1]: "lap time"
-  ui[2]: ""
+  ui[2]: "reset (active high)"
   ui[3]: ""
   ui[4]: ""
   ui[5]: ""
