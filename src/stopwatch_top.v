@@ -8,7 +8,7 @@
 // ui_in [0]: reset: resets the stopwatch to 00:00:00
 // ui_in [1]: speed: 
 
-module tt_um_faramire_lcd_stopwatch_draft (
+module tt_um_faramire_stopwatch (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
