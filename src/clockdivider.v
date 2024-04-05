@@ -13,7 +13,7 @@ module clockDivider (
     output reg clk_out // output clock 100 Hz
  );
 
-    reg[13:0] counter =    0;
+    reg[13:0] counter;
     parameter div     = 5000; // 1 MHz / 10'000 = 100 Hz, 50% duty cycle => 1/2 of that
 
 

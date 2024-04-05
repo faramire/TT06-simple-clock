@@ -4,6 +4,12 @@
  */
 
 `define default_netname none
+`include "clockdivider.v"
+`include "controller.v"
+`include "counter6.v"
+`include "counter10.v"
+`include "counter_chain.v"
+`include "SPI_driver.v"
 
 // ui_in [0]: reset: resets the stopwatch to 00:00:00
 // ui_in [1]: speed: 
@@ -39,13 +45,13 @@ module tt_um_faramire_stopwatch (
   wire [3:0] ces_X0;
   wire [3:0] ces_0X;
 
-  clockDivider inst1 ( // divides the 100 MHz clock to 100 Hz
+  clockDivider clockDivider1 ( // divides the 100 MHz clock to 100 Hz
     .clk_in  (clock_enable),
     .res     (reset_either),
     .clk_out (dividedClock)
   );
 
-  controller inst1 ( // two latches for starting/stopping and lap times
+  controller controller1 ( // two latches for starting/stopping and lap times
     .res        (rst_n),
     .start_stop (ui_in[0]),
     .lap_time   (ui_in[1]),
@@ -56,7 +62,7 @@ module tt_um_faramire_stopwatch (
   assign uo_out[3] = counter_enable; // output the internal state
   assign uo_out[4] = display_enable;
 
-  counter_chain inst1 ( // a chain of 6 counters that count from 00:00:00 to 59:59:99
+  counter_chain counter_chain1 ( // a chain of 6 counters that count from 00:00:00 to 59:59:99
     .clk (dividedClock),
     .ena (counter_enable),
     .res (reset_either),
@@ -68,11 +74,11 @@ module tt_um_faramire_stopwatch (
     .ces_0X (ces_0X)
   );
 
-  SPI_driver inst1 ( // drives the 7-segment displays connected via a MAX7219 chip over SPI
+  SPI_driver SPI_driver ( // drives the 7-segment displays connected via a MAX7219 chip over SPI
     .clk (clk),
     .res (rst_n),
     .ena (display_enable),
-    .min_X0 (min_X0)
+    .min_X0 (min_X0),
     .min_0X (min_0X),
     .sec_X0 (sec_X0),
     .sec_0X (sec_0X),
