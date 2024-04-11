@@ -78,6 +78,7 @@ module tt_um_faramire_stopwatch (
     .clk (clk),
     .res (rst_n),
     .ena (display_enable),
+    .clk_div(dividedClock),
     .min_X0 (min_X0),
     .min_0X (min_0X),
     .sec_X0 (sec_X0),
