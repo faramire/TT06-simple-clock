@@ -16,16 +16,16 @@ module SPI_wrapper (
     input wire [3:0] ces_X0, // centiseconds (100th)
     input wire [3:0] ces_0X,
 
-    output reg Mosi,
-    output reg Cs,
-    output reg clk_SPI
+    output wire Mosi,
+    output wire Cs,
+    output wire clk_SPI
 );
     
     // FSM
     reg [1:0] state;
-    localparam INIT = 2'b00;
+    localparam SETUP = 2'b00;
     localparam IDLE = 2'b01;
-    localparam SEND = 2'b10;
+    localparam TRANSFER = 2'b10;
     localparam WAIT = 2'b11;
 
     reg word_pos; // 0 -> MSBy, 1 -> LSBy
@@ -37,11 +37,11 @@ module SPI_wrapper (
 
     always @(posedge clk_div or negedge res) begin  // controlling FSM
         if (!res) begin // active low reset
-            state <= INIT;
+            state <= SETUP;
         end
-        Case(state)
+        case(state)
 
-            INIT: begin // send a setup packet enabling BCD
+            SETUP: begin // send a setup packet enabling BCD
                 if (next_byte & res) begin
                     if (word_pos == 1'b0) begin
                         byte_out <= 8'b00001001; // address = decode mode
@@ -52,7 +52,7 @@ module SPI_wrapper (
                         byte_out <= 8'b11111111; // data = BCD for all
                         send_byte <= 1'b1;
                         word_pos <= 1'b0;
-                        state <= Idle;
+                        state <= IDLE;
                     end
                 end else begin
                     send_byte <= 1'b0;
@@ -62,14 +62,14 @@ module SPI_wrapper (
             IDLE: begin
                 if (clk_div & ena) begin // wait for the 100Hz clock to get high
                     digit_count <= 3'b000;
-                    state <= Send;
+                    state <= TRANSFER;
                 end
             end
 
-            SEND: begin
+            TRANSFER: begin
                 if (next_byte) begin // TX ready
                     if (word_pos == 1'b0) begin // address byte
-                        Case(digit_count)
+                        case(digit_count)
 
                             3'b000: begin // ces_0X
                                 byte_out <= 8'b00000001;
@@ -112,7 +112,8 @@ module SPI_wrapper (
                     end
 
                     else if (word_pos == 1'b1) begin // data byte
-                        Case(digit_count)
+
+                        case(digit_count)
 
                             3'b000: begin // ces_0X
                                 byte_out <= 8'b00000000 | ces_0X;
@@ -153,6 +154,7 @@ module SPI_wrapper (
                                 byte_out <= 8'b00000000 | min_X0;
                                 send_byte <= 1'b1;
                                 word_pos <= 1'b0;
+                                state <= WAIT;
                             end
 
                             default:digit_count <= 3'b000;
@@ -166,11 +168,11 @@ module SPI_wrapper (
 
             WAIT: begin // wait for the 100 Hz clock to go low again
                 if (!clk_div) begin
-                    state <= Idle;
+                    state <= IDLE;
                 end
             end
 
-            default:state <= INIT;
+            default:state <= SETUP;
         endcase    
     end
 
@@ -178,7 +180,7 @@ module SPI_wrapper (
         .i_Rst_L(res),
         .i_Clk(clk),
 
-        .i_TX_Byte(2),
+        .i_TX_Byte(byte_out),
         .i_TX_DV(send_byte),
         .o_TX_Ready(next_byte),
 

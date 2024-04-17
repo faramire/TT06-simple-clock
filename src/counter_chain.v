@@ -10,12 +10,12 @@ module counter_chain (
     input wire ena,
     input wire res,
     // the X denotes which digit the counter drives
-    output reg [3:0] ces_0X, // centiseconds (100th)
-    output reg [3:0] ces_X0,
-    output reg [3:0] sec_0X, // seconds
-    output reg [2:0] sec_X0,
-    output reg [3:0] min_0X, // minutes
-    output reg [2:0] min_X0
+    output wire [3:0] ces_0X, // centiseconds (100th)
+    output wire [3:0] ces_X0,
+    output wire [3:0] sec_0X, // seconds
+    output wire [2:0] sec_X0,
+    output wire [3:0] min_0X, // minutes
+    output wire [2:0] min_X0
  );
 
     wire ces_X0_ena;
