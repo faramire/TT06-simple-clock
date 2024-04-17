@@ -572,10 +572,15 @@ module SPI_Master
         o_SPI_MOSI     <= r_TX_Byte[3'b111];
         r_TX_Bit_Count <= 3'b110;
       end
-      else if ((r_Leading_Edge & w_CPHA) | (r_Trailing_Edge & ~w_CPHA))
-      begin
-        r_TX_Bit_Count <= r_TX_Bit_Count - 1'b1;
-        o_SPI_MOSI     <= r_TX_Byte[r_TX_Bit_Count];
+      else begin
+        if (r_Leading_Edge & w_CPHA) begin
+          r_TX_Bit_Count <= r_TX_Bit_Count - 1'b1;
+          o_SPI_MOSI     <= r_TX_Byte[r_TX_Bit_Count];
+        end
+        else if (r_Trailing_Edge & ~w_CPHA) begin
+          r_TX_Bit_Count <= r_TX_Bit_Count - 1'b1;
+          o_SPI_MOSI     <= r_TX_Byte[r_TX_Bit_Count];
+        end
       end
     end
   end
