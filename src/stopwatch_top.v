@@ -21,6 +21,7 @@ module tt_um_faramire_stopwatch (
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out = 0;
   assign uio_oe  = 0;
+  assign uo_out[7:3]  = 0;
 
   wire dividedClock; // 100 Hz clock
   wire counter_enable;
@@ -103,7 +104,7 @@ module clockDivider (
         end else if (counter < (div-1)) begin    // count up
             counter <= counter + 1;
         end else begin                  // reset counter and invert output
-            counter <= 1'b0;
+            counter <= 14'b0;
             clk_out <= ~clk_out; 
         end
     end
@@ -294,7 +295,6 @@ module SPI_wrapper (
     reg [7:0] byte_out;
     reg send_byte;
     reg [2:0] digit_count;
-    reg send_time_latch;
     wire next_byte;
 
     always @(posedge clk or negedge res) begin  // controlling FSM
@@ -497,7 +497,7 @@ module SPI_Master_With_Single_CS
   #(parameter SPI_MODE = 0,
     parameter CLKS_PER_HALF_BIT = 2,
     parameter MAX_BYTES_PER_CS = 2,
-    parameter CS_INACTIVE_CLKS = 1)
+    parameter CS_INACTIVE_CLKS = 2)
   (
    // Control/Data Signals,
    input        i_Rst_L,     // FPGA Reset
@@ -698,7 +698,7 @@ module SPI_Master
 
 
   // Purpose: Generate SPI Clock correct number of times when DV pulse comes
-  always @(posedge i_Clk or negedge i_Rst_L)
+  always @(posedge i_Clk) // or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
     begin
@@ -709,7 +709,7 @@ module SPI_Master
       r_SPI_Clk       <= w_CPOL; // assign default state to idle state
       r_SPI_Clk_Count <= 0;
     end
-    else if (i_Clk) begin
+    else begin
 
       // Default assignments
       r_Leading_Edge  <= 1'b0;
