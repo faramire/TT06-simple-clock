@@ -21,7 +21,7 @@ module tt_um_faramire_stopwatch (
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out = 0;
   assign uio_oe  = 0;
-  assign uo_out[7:3]  = 0;
+  assign uo_out[7:5]  = 0;
 
   wire dividedClock; // 100 Hz clock
   wire counter_enable;
@@ -497,7 +497,7 @@ module SPI_Master_With_Single_CS
   #(parameter SPI_MODE = 0,
     parameter CLKS_PER_HALF_BIT = 2,
     parameter MAX_BYTES_PER_CS = 2,
-    parameter CS_INACTIVE_CLKS = 2)
+    parameter CS_INACTIVE_CLKS = 0
   (
    // Control/Data Signals,
    input        i_Rst_L,     // FPGA Reset
@@ -853,6 +853,5 @@ module SPI_Master
         o_SPI_Clk <= r_SPI_Clk;
       end // else: !if(~i_Rst_L)
   end // always @ (posedge i_Clk or negedge i_Rst_L)
-  
 
 endmodule // SPI_Master
