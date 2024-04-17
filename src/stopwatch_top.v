@@ -297,7 +297,7 @@ module SPI_wrapper (
     reg send_time_latch;
     wire next_byte;
 
-    always @(posedge clk_div or negedge res) begin  // controlling FSM
+    always @(posedge clk or negedge res) begin  // controlling FSM
         if (!res) begin // active low reset
             state <= SETUP;
         end
@@ -645,44 +645,6 @@ module SPI_Master_With_Single_CS
 
 endmodule // SPI_Master_With_Single_CS
 
-/*
- * Copyright (c) 2019 russell-merrick
- * SPDX-License-Identifier: MIT
- * https://github.com/nandland/spi-master
- */
-
-///////////////////////////////////////////////////////////////////////////////
-// Description: SPI (Serial Peripheral Interface) Master
-//              Creates master based on input configuration.
-//              Sends a byte one bit at a time on MOSI
-//              Will also receive byte data one bit at a time on MISO.
-//              Any data on input byte will be shipped out on MOSI.
-//
-//              To kick-off transaction, user must pulse i_TX_DV.
-//              This module supports multi-byte transmissions by pulsing
-//              i_TX_DV and loading up i_TX_Byte when o_TX_Ready is high.
-//
-//              This module is only responsible for controlling Clk, MOSI, 
-//              and MISO.  If the SPI peripheral requires a chip-select, 
-//              this must be done at a higher level.
-//
-// Note:        i_Clk must be at least 2x faster than i_SPI_Clk
-//
-// Parameters:  SPI_MODE, can be 0, 1, 2, or 3.  See above.
-//              Can be configured in one of 4 modes:
-//              Mode | Clock Polarity (CPOL/CKP) | Clock Phase (CPHA)
-//               0   |             0             |        0
-//               1   |             0             |        1
-//               2   |             1             |        0
-//               3   |             1             |        1
-//              More: https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus#Mode_numbers
-//              CLKS_PER_HALF_BIT - Sets frequency of o_SPI_Clk.  o_SPI_Clk is
-//              derived from i_Clk.  Set to integer number of clocks for each
-//              half-bit of SPI data.  E.g. 100 MHz i_Clk, CLKS_PER_HALF_BIT = 2
-//              would create o_SPI_CLK of 25 MHz.  Must be >= 2
-//
-///////////////////////////////////////////////////////////////////////////////
-
 module SPI_Master
   #(parameter SPI_MODE = 0,
     parameter CLKS_PER_HALF_BIT = 2)
@@ -747,8 +709,7 @@ module SPI_Master
       r_SPI_Clk       <= w_CPOL; // assign default state to idle state
       r_SPI_Clk_Count <= 0;
     end
-    else
-    begin
+    else if (i_Clk) begin
 
       // Default assignments
       r_Leading_Edge  <= 1'b0;
@@ -848,7 +809,7 @@ module SPI_Master
   end
 
 
-  // Purpose: Read in MISO data.
+/*   // Purpose: Read in MISO data.
   always @(posedge i_Clk or negedge i_Rst_L)
   begin
     if (~i_Rst_L)
@@ -877,7 +838,7 @@ module SPI_Master
         end
       end
     end
-  end
+  end */
   
   
   // Purpose: Add clock delay to signals for alignment.
