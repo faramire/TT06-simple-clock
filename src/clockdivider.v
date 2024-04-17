@@ -19,12 +19,12 @@ module clockDivider (
 
     always @(posedge clk_in or negedge res) begin
         if (!res) begin     // async reset
-            counter <= 0;
-            clk_out <= 0;
+            counter <= 14'b0;
+            clk_out <= 1'b0;
         end else if (counter < (div-1)) begin    // count up
             counter <= counter + 1;
         end else begin                  // reset counter and invert output
-            counter <= 0;
+            counter <= 1'b0;
             clk_out <= ~clk_out; 
         end
     end

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2019 russell-merrick
+ * SPDX-License-Identifier: MIT
+ * https://github.com/nandland/spi-master
+ */
+
 ///////////////////////////////////////////////////////////////////////////////
 // Description: SPI (Serial Peripheral Interface) Master
 //              With single chip-select (AKA Slave Select) capability

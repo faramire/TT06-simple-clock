@@ -15,24 +15,23 @@ module counter6 (
     output reg [2:0] cnt  // 3 bit counter output
  );
 
-    reg[2:0]  counter   = 0;
     parameter max_count = 6;
 
     always @(posedge clk or negedge res) begin
         if (!res) begin
-            cnt <= 0;
-            max <= 0;
+            cnt <= 3'b0;
+            max <= 1'b0;
         end else if (ena) begin
             if (cnt < (max_count-1)) begin
                 cnt <= cnt + 1;
             end else begin
-                cnt <= 0;
+                cnt <= 3'b0;
             end
 
           if (cnt == max_count-2) begin
-            	max <= 1;
+            	max <= 1'b1;
             end else begin
-                max <= 0;
+                max <= 1'b0;
             end
         end
     end

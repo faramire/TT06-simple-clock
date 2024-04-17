@@ -15,14 +15,14 @@ module controller (
   
     always @(posedge start_stop or negedge res) begin
         if (!res)
-            counter_enable <= 0;
+            counter_enable <= 1'b0;
         else
             counter_enable <= ~counter_enable;
     end
   
     always @(posedge lap_time or negedge res) begin
         if (!res)
-            display_enable <= 1;
+            display_enable <= 1'b1;
         else
             display_enable <= ~display_enable;
     end
