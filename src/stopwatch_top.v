@@ -10,8 +10,6 @@
 `include "counter10.v"
 `include "counter_chain.v"
 `include "SPI_wrapper.v"
-`include "SPI_Master_With_single_CS.v"
-//`include "SPI_driver.v"
 
 // ui_in [0]: reset: resets the stopwatch to 00:00:00
 // ui_in [1]: speed: 
@@ -78,34 +76,20 @@ module tt_um_faramire_stopwatch (
 
   SPI_wrapper SPI_wrapper1 (
     .clk (clk),
+    .clk_div(dividedClock),
     .res (rst_n),
     .ena (display_enable),
-    .clk_div(dividedClock),
     .min_X0 (min_X0),
     .min_0X (min_0X),
     .sec_X0 (sec_X0),
     .sec_0X (sec_0X),
     .ces_X0 (ces_X0),
     .ces_0X (ces_0X),
-    .MOSI    (uo_out[0]), // MOSI on out 0
-    .CS      (uo_out[1]), //  CS  on out 1
+    .Mosi    (uo_out[0]), // MOSI on out 0
+    .Cs      (uo_out[1]), //  CS  on out 1
     .clk_SPI (uo_out[2])  //  CLK on out 3
   );
 
-  /* SPI_driver SPI_driver1 ( // drives the 7-segment displays connected via a MAX7219 chip over SPI
-    .clk (clk),
-    .res (rst_n),
-    .ena (display_enable),
-    .clk_div(dividedClock),
-    .min_X0 (min_X0),
-    .min_0X (min_0X),
-    .sec_X0 (sec_X0),
-    .sec_0X (sec_0X),
-    .ces_X0 (ces_X0),
-    .ces_0X (ces_0X),
-    .MOSI    (uo_out[0]), // MOSI on out 0
-    .CS      (uo_out[1]), //  CS  on out 1
-    .clk_SPI (uo_out[2])  //  CLK on out 3
-  ); */
+
 
 endmodule

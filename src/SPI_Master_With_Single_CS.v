@@ -37,7 +37,7 @@
 //              command is allowed on the line.  Useful if chip requires some
 //              time when CS is high between trasnfers.
 ///////////////////////////////////////////////////////////////////////////////
-
+`include "SPI_Master.v"
 module SPI_Master_With_Single_CS
   #(parameter SPI_MODE = 0,
     parameter CLKS_PER_HALF_BIT = 2,
