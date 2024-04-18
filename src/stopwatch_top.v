@@ -342,37 +342,37 @@ module SPI_wrapper (
           case(digit_count)
 
             3'b000: begin // ces_0X
-              word_out <= {8'b0000_0001, 8'b0000_0000 | ces_0X}; // send the 16-bit word
+              word_out <= {8'b0000_0001, 8'b0000_0000 | {4'b0000, ces_0X}}; // send the 16-bit word
               Cs <= 0; // pull CS low to initiate send
               digit_count <= 3'b001; // advance the position counter
             end
 
             3'b001: begin // ces_X0
-              word_out <= {8'b0000_0010, 8'b0000_0000 | ces_X0};
+              word_out <= {8'b0000_0010, 8'b0000_0000 | {4'b0000, ces_X0}};
               Cs <= 0;
               digit_count <= 3'b010;
             end
 
             3'b010: begin // sec_0X
-              word_out <= {8'b0000_0011, 8'b1000_0000 | sec_0X};
+              word_out <= {8'b0000_0011, 8'b1000_0000 | {4'b0000, sec_0X}};
               Cs <= 0;
               digit_count <= 3'b011;
             end
 
             3'b011: begin // sec_X0
-              word_out <= {8'b0000_0100, 8'b0000_0000 | sec_X0};
+              word_out <= {8'b0000_0100, 8'b0000_0000 | {5'b00000, sec_X0}};
               Cs <= 0;
               digit_count <= 3'b100;
             end
 
             3'b100: begin // min_0X
-              word_out <= {8'b0000_0101, 8'b1000_0000 | min_0X};
+              word_out <= {8'b0000_0101, 8'b1000_0000 | {4'b0000, min_0X}};
               Cs <= 0;
               digit_count <= 3'b101;
             end
 
             3'b101: begin // min_X0
-              word_out <= {8'b0000_0110, 8'b0000_0000 | min_X0};
+              word_out <= {8'b0000_0110, 8'b0000_0000 | {5'b00000, min_X0}};
               Cs <= 0;
               digit_count <= 3'b110;
             end
@@ -434,7 +434,6 @@ module SPI_Master (
   reg  [1:0] state;
   reg  [1:0] count_bit; // count through the clock cylce: 00 pull low (set), 01 hold low, 10 pull high (sample), 11 hold high
   reg  [3:0] count_word; // count through the bits of the word
-  reg        word_done;
   reg [15:0] word_out;
 
 
@@ -457,7 +456,6 @@ module SPI_Master (
           else begin // CS low: order to send the word
             count_bit <= 0;
             count_word <= 15;
-            word_done <= 0;
             word_out <= word_in;
             report_send <= 0;
             report_ready <= 0;
@@ -514,6 +512,7 @@ module SPI_Master (
           end
         end // DONE
 
+        default:;
       endcase
     end
   end
