@@ -12,7 +12,7 @@ module tt_um_faramire_stopwatch (
   output wire [7:0] uio_out,  // IOs: Output path
   output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
   input  wire       ena,      // will go high when the design is enabled
-  input  wire       clk_ice,      // clock
+  input  wire       clk,      // clock
   input  wire       rst_n     // reset_n - low to reset
  );
   // All output pins must be assigned. If not used, assign to 0.
@@ -39,15 +39,6 @@ module tt_um_faramire_stopwatch (
   wire [3:0] w_sec_0X;
   wire [3:0] w_ces_X0;
   wire [3:0] w_ces_0X;
-
-  wire clk;
-
-  clockDividerIce clockDividerIce1 ( // divides the 12 MHz clock to 1MHz
-    .clk_in  (clk_ice),
-    .ena     (1'b1),
-    .res     (reset_either),
-    .clk_out (clk)
-  );
 
   clockDivider clockDivider1 ( // divides the 1 MHz clock to 100 Hz
     .clk_in  (clk),
@@ -96,33 +87,6 @@ module tt_um_faramire_stopwatch (
   );
 
 endmodule // tt_um_faramire_stopwatch
-
-module clockDividerIce (
-  input wire clk_in, // input clock 12 MHz
-  input wire ena,
-  input wire res,    // reset, active low
-  output reg clk_out // output clock 1 MHz
-);
-
-  reg[2:0] counter;
-  parameter div     = 6; // 12 MHz / 12 = 1 MHz, 50% duty cycle => 1/2 of that
-
-
-  always @(posedge clk_in) begin
-    if (!res) begin // reset
-      counter <= 3'b0;
-      clk_out <= 1'b0;
-    end else if (ena) begin
-      if (counter < (div-1)) begin    // count up
-        counter <= counter + 1;
-      end else begin                  // reset counter and invert output
-        counter <= 3'b0;
-        clk_out <= ~clk_out; 
-      end
-    end
-  end
-
-endmodule //clockDividerIce
 
 module clockDivider (
   input wire clk_in, // input clock 1 MHz
