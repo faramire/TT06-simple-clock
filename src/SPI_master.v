@@ -43,7 +43,7 @@ module SPI_Master (
             report_send <= 0;
             report_ready <= 1;
           end
-          if (cs_in == 0) begin // order to send the word
+          else begin // CS low: order to send the word
             count_bit <= 0;
             count_word <= 15;
             word_done <= 0;
