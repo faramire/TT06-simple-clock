@@ -142,7 +142,7 @@ module counter6 (
 
 parameter max_count = 6;
 
-  always @(posedge clk) begin
+  always @(posedge clk  or negedge res) begin
     if (!res) begin
       cnt <= 3'b0;
       max <= 1'b0;
@@ -173,7 +173,7 @@ module counter10 (
 
   parameter max_count = 10;
 
-  always @(posedge clk) begin
+  always @(posedge clk or negedge res) begin
     if (!res) begin
       cnt <= 4'b0;
       max <= 1'b0;
@@ -214,6 +214,13 @@ module counter_chain (
   wire min_X0_ena;
 
   wire max; // just something to connect the unused max pin of the last counter to something
+
+  /* reg res;
+
+  always @(negedge res_in) begin
+    
+  end
+ */
 
   counter10 inst_ces_0X ( // counts first digit centiseconds
     .clk (clk), // clock in
@@ -316,10 +323,11 @@ module SPI_wrapper (
           reset_master <= 1;
           if (ready_reported == 1) begin
             word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
+            digit_count <= 3'b000;
             Cs <= 0;
-            sent_ON <= 0;
+            sent_ON <= 1;
           end
-          else if (send_reported == 1 && sent_BCD) begin // data send, Cs can be pulled high again
+          else if (send_reported == 1 && sent_ON) begin // data send, Cs can be pulled high again
             Cs <= 1;
             state <= SETUP_BCD;
           end
@@ -329,6 +337,7 @@ module SPI_wrapper (
       SETUP_BCD: begin // send a setup packet enabling BCD
         if (ready_reported == 1) begin
           word_out <= 16'b0000_1001_1111_1111; // address = decode mode, data = BCD for all
+          digit_count <= 3'b000;
           Cs <= 0;
           sent_BCD <= 1;
         end
@@ -341,6 +350,7 @@ module SPI_wrapper (
       IDLE: begin
         if (clk_div & ena) begin // wait for the 100Hz clock to get high
           digit_count <= 3'b000;
+          Cs <= 0;
           state <= TRANSFER;
         end
       end // IDLE
