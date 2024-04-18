@@ -24,21 +24,24 @@ module tt_um_faramire_stopwatch (
   wire counter_enable;
   wire display_enable;
   wire reset_either; // an OR of the input reset and the chip wide reset, for those that shall be affected by both
-  wire clock_enable; // and AND of the clock with the counter enable,
+  wire reset_either_async;
+  //wire clock_enabled; // and AND of the clock with the counter enable,
                      // so that the clock divider doesn't advance when the counters are halted
 
   assign reset_either = rst_n | (~ui_in[2]);
-  assign clock_enable = counter_enable & clk;
+  assign reset_either_async = rst_n | (~ui_in[2]);
+  //assign clock_enabled = counter_enable && clk;
 
-  wire [2:0] min_X0; // all the results of the counter chain
-  wire [3:0] min_0X;
-  wire [2:0] sec_X0;
-  wire [3:0] sec_0X;
-  wire [3:0] ces_X0;
-  wire [3:0] ces_0X;
+  wire [2:0] w_min_X0; // all the results of the counter chain
+  wire [3:0] w_min_0X;
+  wire [2:0] w_sec_X0;
+  wire [3:0] w_sec_0X;
+  wire [3:0] w_ces_X0;
+  wire [3:0] w_ces_0X;
 
   clockDivider clockDivider1 ( // divides the 100 MHz clock to 100 Hz
-    .clk_in  (clock_enable),
+    .clk_in  (clk),
+    .ena     (counter_enable),
     .res     (reset_either),
     .clk_out (dividedClock)
   );
@@ -57,13 +60,13 @@ module tt_um_faramire_stopwatch (
   counter_chain counter_chain1 ( // a chain of 6 counters that count from 00:00:00 to 59:59:99
     .clk (dividedClock),
     .ena (counter_enable),
-    .res (reset_either),
-    .min_X0 (min_X0),
-    .min_0X (min_0X),
-    .sec_X0 (sec_X0),
-    .sec_0X (sec_0X),
-    .ces_X0 (ces_X0),
-    .ces_0X (ces_0X)
+    .res (reset_either_async),
+    .min_X0 (w_min_X0),
+    .min_0X (w_min_0X),
+    .sec_X0 (w_sec_X0),
+    .sec_0X (w_sec_0X),
+    .ces_X0 (w_ces_X0),
+    .ces_0X (w_ces_0X)
   );
 
   SPI_wrapper SPI_wrapper1 (
@@ -71,12 +74,12 @@ module tt_um_faramire_stopwatch (
     .clk_div(dividedClock),
     .res (rst_n),
     .ena (display_enable),
-    .min_X0 (min_X0),
-    .min_0X (min_0X),
-    .sec_X0 (sec_X0),
-    .sec_0X (sec_0X),
-    .ces_X0 (ces_X0),
-    .ces_0X (ces_0X),
+    .min_X0 (w_min_X0),
+    .min_0X (w_min_0X),
+    .sec_X0 (w_sec_X0),
+    .sec_0X (w_sec_0X),
+    .ces_X0 (w_ces_X0),
+    .ces_0X (w_ces_0X),
     .Mosi    (uo_out[0]), // MOSI on out 0
     .Cs      (uo_out[1]), //  CS  on out 1
     .Clk_SPI (uo_out[2])  //  CLK on out 3
@@ -86,6 +89,7 @@ endmodule // tt_um_faramire_stopwatch
 
 module clockDivider (
   input wire clk_in, // input clock 1 MHz
+  input wire ena,
   input wire res,    // reset, active low
   output reg clk_out // output clock 100 Hz
 );
@@ -98,11 +102,13 @@ module clockDivider (
     if (!res) begin     // reset
       counter <= 14'b0;
       clk_out <= 1'b0;
-    end else if (counter < (div-1)) begin    // count up
-      counter <= counter + 1;
-    end else begin                  // reset counter and invert output
-      counter <= 14'b0;
-      clk_out <= ~clk_out; 
+    end else if (ena) begin
+      if (counter < (div-1)) begin    // count up
+        counter <= counter + 1;
+      end else begin                  // reset counter and invert output
+        counter <= 14'b0;
+        clk_out <= ~clk_out; 
+      end
     end
   end
 
@@ -350,7 +356,6 @@ module SPI_wrapper (
       IDLE: begin
         if (clk_div & ena) begin // wait for the 100Hz clock to get high
           digit_count <= 3'b000;
-          Cs <= 0;
           state <= TRANSFER;
         end
       end // IDLE
