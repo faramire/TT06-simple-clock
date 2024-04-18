@@ -296,6 +296,8 @@ module SPI_wrapper (
   wire send_reported;
   wire ready_reported;
   reg reset_master;
+  reg sent_ON;
+  reg sent_BCD;
 
   always @(posedge clk) begin  // controlling FSM
     if (!res) begin // active low reset
@@ -303,6 +305,8 @@ module SPI_wrapper (
       reset_master <= 0;
       word_out <= 16'b0;
       digit_count <= 3'b0;
+      sent_ON <= 0;
+      sent_BCD <= 0;
       state <= SETUP_ON;
     end
     case(state)
@@ -313,8 +317,9 @@ module SPI_wrapper (
           if (ready_reported == 1) begin
             word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
             Cs <= 0;
+            sent_ON <= 0;
           end
-          else if (send_reported == 1) begin // data send, Cs can be pulled high again
+          else if (send_reported == 1 && sent_BCD) begin // data send, Cs can be pulled high again
             Cs <= 1;
             state <= SETUP_BCD;
           end
@@ -325,8 +330,9 @@ module SPI_wrapper (
         if (ready_reported == 1) begin
           word_out <= 16'b0000_1001_1111_1111; // address = decode mode, data = BCD for all
           Cs <= 0;
+          sent_BCD <= 1;
         end
-        else if (send_reported == 1) begin // data send, Cs can be pulled high again
+        else if (send_reported == 1 && sent_BCD == 1) begin // data send, Cs can be pulled high again
           Cs <= 1;
           state <= IDLE;
         end

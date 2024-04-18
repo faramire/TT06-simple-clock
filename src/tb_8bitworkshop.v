@@ -4,7 +4,7 @@
  */
 
 `define default_netname none
-`include "tt_um_faramire_stopwatch.v"
+`include "../src/tt_um_faramire_stopwatch.v"
 module stopwatch (
   input wire clk,
   input wire reset_board,
