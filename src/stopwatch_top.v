@@ -7,7 +7,7 @@
 
 // ui_in [0]: reset: resets the stopwatch to 00:00:00
 // ui_in [1]: speed: 
-
+`include "SPI_wrapper.v"
 module tt_um_faramire_stopwatch (
   input  wire [7:0] ui_in,    // Dedicated inputs
   output wire [7:0] uo_out,   // Dedicated outputs
@@ -82,7 +82,7 @@ module tt_um_faramire_stopwatch (
     .ces_0X (ces_0X),
     .Mosi    (uo_out[0]), // MOSI on out 0
     .Cs      (uo_out[1]), //  CS  on out 1
-    .clk_SPI (uo_out[2])  //  CLK on out 3
+    .Clk_SPI (uo_out[2])  //  CLK on out 3
   );
 
 endmodule // tt_um_faramire_stopwatch
