@@ -97,7 +97,7 @@ module clockDivider (
   parameter div     = 5000; // 1 MHz / 10'000 = 100 Hz, 50% duty cycle => 1/2 of that
 
 
-  always @(posedge clk_in or negedge res) begin
+  always @(posedge clk_in) begin
     if (!res) begin     // async reset
       counter <= 14'b0;
       clk_out <= 1'b0;
@@ -119,14 +119,14 @@ module controller (
   output reg  display_enable  //
 );
 
-  always @(posedge start_stop or negedge res) begin
+  always @(posedge start_stop) begin
     if (!res)
       counter_enable <= 1'b0;
     else
       counter_enable <= ~counter_enable;
   end
 
-  always @(posedge lap_time or negedge res) begin
+  always @(posedge lap_time) begin
     if (!res)
       display_enable <= 1'b1;
     else
@@ -145,7 +145,7 @@ module counter6 (
 
 parameter max_count = 6;
 
-  always @(posedge clk or negedge res) begin
+  always @(posedge clk) begin
     if (!res) begin
       cnt <= 3'b0;
       max <= 1'b0;
@@ -176,7 +176,7 @@ module counter10 (
 
   parameter max_count = 10;
 
-  always @(posedge clk or negedge res) begin
+  always @(posedge clk) begin
     if (!res) begin
       cnt <= 4'b0;
       max <= 1'b0;

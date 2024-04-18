@@ -31,12 +31,11 @@ module SPI_wrapper (
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
-  reg [1:0] setup_count;
   wire send_reported;
   wire ready_reported;
   reg reset_master;
 
-  always @(posedge clk or negedge res) begin  // controlling FSM
+  always @(posedge clk) begin  // controlling FSM
     if (!res) begin // active low reset
       Cs <= 1;
       reset_master <= 0;
@@ -149,7 +148,7 @@ module SPI_wrapper (
     .report_send(send_reported),
     .report_ready(ready_reported),
 
-    .sck(clk_SPI),
+    .sck(Clk_SPI),
     .mosi(Mosi)
   );
 
