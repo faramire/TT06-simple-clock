@@ -99,7 +99,7 @@ module clockDivider (
 
 
   always @(posedge clk_in) begin
-    if (!res) begin     // reset
+    if (!res) begin // reset
       counter <= 14'b0;
       clk_out <= 1'b0;
     end else if (ena) begin
@@ -220,13 +220,6 @@ module counter_chain (
   wire min_X0_ena;
 
   wire max; // just something to connect the unused max pin of the last counter to something
-
-  /* reg res;
-
-  always @(negedge res_in) begin
-    
-  end
- */
 
   counter10 inst_ces_0X ( // counts first digit centiseconds
     .clk (clk), // clock in
