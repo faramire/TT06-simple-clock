@@ -213,6 +213,8 @@ module counter_chain (
   wire min_0X_ena;
   wire min_X0_ena;
 
+  wire max; // just something to connect the unused max pin of the last counter to something
+
   counter10 inst_ces_0X ( // counts first digit centiseconds
     .clk (clk), // clock in
     .ena (ena), // enable
@@ -257,7 +259,7 @@ module counter_chain (
     .clk (clk),
     .ena (ena & ces_X0_ena & sec_0X_ena & sec_X0_ena & min_0X_ena & min_X0_ena),
     .res (res),
-    .max (),
+    .max (max),
     .cnt (min_X0)
   );
 
