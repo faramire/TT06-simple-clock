@@ -1,0 +1,18 @@
+set_io CLK_IN 21
+
+set_io o_stopwatch_enabled 95
+set_io o_display_enabled 96
+set_io o_mosi 97
+set_io o_cs 98
+set_io o_sck 99
+
+set_io i_board_reset 119
+set_io i_button_start_stop 118
+set_io i_button_lap_time 117
+set_io i_button_reset 116
+
+set_io o_mosi 114
+set_io o_cs 113
+set_io o_sck 112
+set_io o_stopwatch_enabled 44
+set_io o_display_enabled 45
