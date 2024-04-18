@@ -10,5 +10,6 @@ test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
 src/SPI_master_nandland.v
+src/SPI_master_faramire.v
 src/transfer.v
 *.v.out

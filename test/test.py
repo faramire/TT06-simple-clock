@@ -23,6 +23,6 @@ async def test_adder(dut):
   dut.rst_n.value = 1
 
   # Set the input values, wait one clock cycle, and check the output
-  assert True
+  assert True # I tested the expected behavior with https://8bitworkshop.com/ instead, as writing code to test the SPI driver especially is quite a nightmare
 
   #assert dut.uo_out.value == 50

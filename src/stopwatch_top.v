@@ -5,9 +5,6 @@
 
 `define default_netname none
 
-// ui_in [0]: reset: resets the stopwatch to 00:00:00
-// ui_in [1]: speed: 
-`include "SPI_wrapper.v"
 module tt_um_faramire_stopwatch (
   input  wire [7:0] ui_in,    // Dedicated inputs
   output wire [7:0] uo_out,   // Dedicated outputs
@@ -89,7 +86,7 @@ endmodule // tt_um_faramire_stopwatch
 
 module clockDivider (
   input wire clk_in, // input clock 1 MHz
-  input wire res,    // async reset, active low
+  input wire res,    // reset, active low
   output reg clk_out // output clock 100 Hz
 );
 
@@ -98,7 +95,7 @@ module clockDivider (
 
 
   always @(posedge clk_in) begin
-    if (!res) begin     // async reset
+    if (!res) begin     // reset
       counter <= 14'b0;
       clk_out <= 1'b0;
     end else if (counter < (div-1)) begin    // count up
@@ -265,3 +262,260 @@ module counter_chain (
   );
 
 endmodule // counter_chain
+
+module SPI_wrapper (
+  input wire clk, // 1 MHz clock to run the FSM and other loops
+  input wire clk_div, // 100 Hz clock to trigger a time to be send out
+  input wire res, // reset, active low
+  input wire ena,
+
+  input wire [2:0] min_X0, // minutes
+  input wire [3:0] min_0X,
+  input wire [2:0] sec_X0, // seconds
+  input wire [3:0] sec_0X,
+  input wire [3:0] ces_X0, // centiseconds (100th)
+  input wire [3:0] ces_0X,
+
+  output wire Mosi,
+  output reg  Cs,
+  output wire Clk_SPI
+);
+    
+  // FSM
+  reg [2:0] state;
+  localparam SETUP_ON  = 3'b000;
+  localparam SETUP_BCD = 3'b001;
+  localparam IDLE      = 3'b100;
+  localparam TRANSFER  = 3'b101;
+  localparam DONE      = 3'b110;
+
+  reg [15:0] word_out;
+  reg [2:0] digit_count;
+  wire send_reported;
+  wire ready_reported;
+  reg reset_master;
+
+  always @(posedge clk) begin  // controlling FSM
+    if (!res) begin // active low reset
+      Cs <= 1;
+      reset_master <= 0;
+      word_out <= 16'b0;
+      digit_count <= 3'b0;
+      state <= SETUP_ON;
+    end
+    case(state)
+
+      SETUP_ON: begin // send a setup packet enabling BCD
+        if (res) begin
+          reset_master <= 1;
+          if (ready_reported == 1) begin
+            word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
+            Cs <= 0;
+          end
+          else if (send_reported == 1) begin // data send, Cs can be pulled high again
+            Cs <= 1;
+            state <= SETUP_BCD;
+          end
+        end
+      end // SETUP
+
+      SETUP_BCD: begin // send a setup packet enabling BCD
+        if (ready_reported == 1) begin
+          word_out <= 16'b0000_1001_1111_1111; // address = decode mode, data = BCD for all
+          Cs <= 0;
+        end
+        else if (send_reported == 1) begin // data send, Cs can be pulled high again
+          Cs <= 1;
+          state <= IDLE;
+        end
+      end // SETUP
+
+      IDLE: begin
+        if (clk_div & ena) begin // wait for the 100Hz clock to get high
+          digit_count <= 3'b000;
+          state <= TRANSFER;
+        end
+      end // IDLE
+
+      TRANSFER: begin
+        if (ready_reported == 1) begin // wait for TX ready
+          case(digit_count)
+
+            3'b000: begin // ces_0X
+              word_out <= {8'b0000_0001, 8'b0000_0000 | ces_0X}; // send the 16-bit word
+              Cs <= 0; // pull CS low to initiate send
+              digit_count <= 3'b001; // advance the position counter
+            end
+
+            3'b001: begin // ces_X0
+              word_out <= {8'b0000_0010, 8'b0000_0000 | ces_X0};
+              Cs <= 0;
+              digit_count <= 3'b010;
+            end
+
+            3'b010: begin // sec_0X
+              word_out <= {8'b0000_0011, 8'b1000_0000 | sec_0X};
+              Cs <= 0;
+              digit_count <= 3'b011;
+            end
+
+            3'b011: begin // sec_X0
+              word_out <= {8'b0000_0100, 8'b0000_0000 | sec_X0};
+              Cs <= 0;
+              digit_count <= 3'b100;
+            end
+
+            3'b100: begin // min_0X
+              word_out <= {8'b0000_0101, 8'b1000_0000 | min_0X};
+              Cs <= 0;
+              digit_count <= 3'b101;
+            end
+
+            3'b101: begin // min_X0
+              word_out <= {8'b0000_0110, 8'b0000_0000 | min_X0};
+              Cs <= 0;
+              digit_count <= 3'b110;
+            end
+
+            3'b110: begin // once send has been complete and CS is high again, switch state
+              state <= DONE;
+            end
+
+            default:digit_count <= 3'b000;
+          endcase
+
+        end else if (send_reported == 1) begin // once data has been send, pull CS high
+          Cs <= 1;
+        end
+      end // TRANSFER
+
+      DONE: begin // wait for the 100 Hz clock to go low again
+        if (!clk_div) begin
+          state <= IDLE;
+        end
+      end // DONE
+
+      default:state <= SETUP_ON;
+    endcase    
+  end
+
+  SPI_Master SPI_Master1 (
+    .clk(clk),
+    .res(reset_master),
+    .cs_in(Cs),
+    .word_in(word_out),
+
+    .report_send(send_reported),
+    .report_ready(ready_reported),
+
+    .sck(Clk_SPI),
+    .mosi(Mosi)
+  );
+
+endmodule // SPI_wrapper
+
+module SPI_Master (
+  input wire clk,
+  input wire res,
+  input wire cs_in,         // CS input
+  input wire [15:0] word_in,   // word to be sent
+
+  output reg sck,           // serial clock
+  output reg mosi,          // MOSI
+  output reg report_send,   // data has been sent, CS can be pulled high
+  output reg report_ready   // ready for next transmission
+);
+
+  // FSM states
+  localparam IDLE     = 2'b00;
+  localparam TRANSFER = 2'b01;
+  localparam DONE     = 2'b10;
+
+  reg  [1:0] state;
+  reg  [1:0] count_bit; // count through the clock cylce: 00 pull low (set), 01 hold low, 10 pull high (sample), 11 hold high
+  reg  [3:0] count_word; // count through the bits of the word
+  reg        word_done;
+  reg [15:0] word_out;
+
+
+  always @(posedge clk) begin
+    if (!res) begin // reset, active low
+      sck <= 0;
+      mosi <= 0;
+      report_send <= 0; // goes high when all data has been send and CS is still low
+      report_ready <= 0; // goes high when CS is high and reset is complete
+      state <= IDLE;
+    end else begin
+
+      case(state) // FSM
+
+        IDLE: begin
+          if (cs_in == 1) begin
+            report_send <= 0;
+            report_ready <= 1;
+          end
+          else begin // CS low: order to send the word
+            count_bit <= 0;
+            count_word <= 15;
+            word_done <= 0;
+            word_out <= word_in;
+            report_send <= 0;
+            report_ready <= 0;
+            state <= TRANSFER;
+          end
+        end // IDLE
+
+        TRANSFER: begin
+          case(count_bit)
+
+            2'b00: begin // pull low
+              sck <= 1'b0;
+              count_bit <= 2'b01;
+
+              mosi <= word_out[15];
+              word_out <= word_out << 1;
+
+              // alternative:
+              /* mosi <= word_out[count_word];
+              count_word <= count_word - 1; */
+            end
+
+            2'b01: begin // hold low
+              sck <= 1'b0;
+              count_bit <= 2'b10;
+            end
+
+            2'b10: begin // pull high
+              sck <= 1'b1;
+              count_bit <= 2'b11;
+            end
+
+            2'b11: begin // hold high
+              sck <= 1'b1;
+              count_bit <= 2'b00;
+
+              if (count_word == 0) begin // end of word? exit
+                state <= DONE;
+              end else begin
+                count_word <= count_word - 1; // this is here so that once it goes 0, one clock cylce is still executed
+              end
+            end
+
+            default:;
+          endcase
+        end // TRANSFER
+
+        DONE: begin
+          sck <= 0; // pull everything low
+          mosi <= 0;
+          report_send <= 1; // send! CS can be pulled high now
+          if (cs_in == 1) begin // once wrapper reacted to report_send, go ready
+            state <= IDLE;
+          end
+        end // DONE
+
+      endcase
+    end
+  end
+
+endmodule
