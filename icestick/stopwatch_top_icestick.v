@@ -297,11 +297,12 @@ module SPI_wrapper (
   reg [2:0] state;
   localparam SETUP_ON  = 3'b000;
   localparam SETUP_BCD = 3'b001;
-  localparam IDLE      = 3'b010;
-  localparam CS_PAUSE  = 3'b011;
-  localparam TRANSFER  = 3'b100;
-  localparam WAIT      = 3'b101;
-  localparam DONE      = 3'b110;
+  localparam SETUP_SCN = 3'b010;
+  localparam IDLE      = 3'b011;
+  localparam CS_PAUSE  = 3'b100;
+  localparam TRANSFER  = 3'b101;
+  localparam WAIT      = 3'b110;
+  localparam DONE      = 3'b111;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
@@ -311,6 +312,7 @@ module SPI_wrapper (
   reg reset_master;
   reg sent_ON;
   reg sent_BCD;
+  reg sent_SCN;
 
   always @(posedge clk) begin  // controlling FSM
     if (!res) begin // active low reset
@@ -342,12 +344,25 @@ module SPI_wrapper (
 
       SETUP_BCD: begin // send a setup packet enabling BCD
         if (ready_reported == 1) begin
-          word_out <= 16'b0000_1001_1111_1111; // address = decode mode, data = BCD for all
+          word_out <= 16'b0000_1001_0011_1111; // address = decode mode, data = BCD for all
           digit_count <= 3'b000;
           Cs <= 0;
           sent_BCD <= 1;
         end
         else if (send_reported == 1 && sent_BCD == 1) begin // data send, Cs can be pulled high again
+          Cs <= 1;
+          state <= SETUP_SCN;
+        end
+      end // SETUP
+
+      SETUP_SCN: begin // send a setup packet enabling 6 digits
+        if (ready_reported == 1) begin
+          word_out <= 16'b0000_1011_0000_0101; // address = scan limit, data = BCD for all
+          digit_count <= 3'b000;
+          Cs <= 0;
+          sent_SCN <= 1;
+        end
+        else if (send_reported == 1 && sent_SCN == 1) begin // data send, Cs can be pulled high again
           Cs <= 1;
           state <= IDLE;
         end
