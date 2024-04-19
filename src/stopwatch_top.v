@@ -425,14 +425,13 @@ module SPI_wrapper (
       end // TRANSFER
 
       WAIT: begin
-        if (send_reported == 1'b1) begin
+        if (send_reported == 1'b1 || ready_reported) begin
           wait_count <= wait_count + 1'b1;
-          if (wait_count == 4'b1111) begin
-            state <= TRANSFER;
-          end else begin
-            wait_count <= wait_count + 1'b1;
-            Cs <= 1;
-          end
+          Cs <= 1;
+        end
+
+        if (wait_count == 4'b1111) begin
+          state <= TRANSFER;
         end
       end
 
