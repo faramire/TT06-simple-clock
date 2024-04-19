@@ -124,13 +124,19 @@ module controller (
   output reg  display_enable  //
 );
 
-  always @(posedge clk) begin
+  always @(posedge start_stop) begin
     if (!res) begin
       counter_enable <= 1'b0;
-      display_enable <= 1'b1;
     end else begin
       counter_enable <= ~counter_enable;
-      display_enable <= ~display_enable;
+    end
+  end
+
+  always @(posedge lap_time) begin
+    if (!res) begin
+      display_enable <= 1'b1;
+    end else begin
+        display_enable <= ~display_enable;
     end
   end
   
