@@ -4,7 +4,7 @@
  */
 
 `define default_netname none
-`include "../src/tt_um_faramire_stopwatch.v"
+`include "stopwatch_top.v"
 module stopwatch (
   input wire clk,
   input wire reset_board,
@@ -19,15 +19,16 @@ module stopwatch (
   output wire display_enabled
 );
 
-  reg [7:0] sink1;
+  wire [7:0] sink1;
+  wire [2:0] sink2;
 
   tt_um_faramire_stopwatch stopwatch1 (
     .ui_in({5'b0, button_reset, button_lap_time, button_start_stop}),
-    .uo_out({3'b0, display_enabled, stopwatch_enabled, sck, cs, mosi}),
+    .uo_out({sink2, display_enabled, stopwatch_enabled, sck, cs, mosi}),
     .uio_in(8'b0),
     .uio_out(sink1),
     .uio_oe(sink1),
-    .ena(1),
+    .ena(1'b1),
     .clk(clk),
     .rst_n(reset_board)
   );

@@ -21,7 +21,6 @@ module tt_um_faramire_stopwatch (
   assign uo_out[7:5]  = 0;
 
   wire dividedClock; // 100 Hz clock
-  wire meg_hertz_clock; // 1 MHz clock
   wire counter_enable;
   wire display_enable;
   wire reset_either; // an OR of the input reset and the chip wide reset, for those that shall be affected by both
@@ -296,7 +295,8 @@ module SPI_wrapper (
   localparam SETUP_BCD = 3'b001;
   localparam IDLE      = 3'b100;
   localparam TRANSFER  = 3'b101;
-  localparam DONE      = 3'b110;
+  localparam WAIT      = 3'b110;
+  localparam DONE      = 3'b111;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
@@ -362,36 +362,42 @@ module SPI_wrapper (
               word_out <= {8'b0000_0001, 8'b0000_0000 | {4'b0000, ces_0X}}; // send the 16-bit word
               Cs <= 0; // pull CS low to initiate send
               digit_count <= 3'b001; // advance the position counter
+              state <= WAIT;
             end
 
             3'b001: begin // ces_X0
               word_out <= {8'b0000_0010, 8'b0000_0000 | {4'b0000, ces_X0}};
               Cs <= 0;
               digit_count <= 3'b010;
+              state <= WAIT;
             end
 
             3'b010: begin // sec_0X
               word_out <= {8'b0000_0011, 8'b1000_0000 | {4'b0000, sec_0X}};
               Cs <= 0;
               digit_count <= 3'b011;
+              state <= WAIT;
             end
 
             3'b011: begin // sec_X0
               word_out <= {8'b0000_0100, 8'b0000_0000 | {5'b00000, sec_X0}};
               Cs <= 0;
               digit_count <= 3'b100;
+              state <= WAIT;
             end
 
             3'b100: begin // min_0X
               word_out <= {8'b0000_0101, 8'b1000_0000 | {4'b0000, min_0X}};
               Cs <= 0;
               digit_count <= 3'b101;
+              state <= WAIT;
             end
 
             3'b101: begin // min_X0
               word_out <= {8'b0000_0110, 8'b0000_0000 | {5'b00000, min_X0}};
               Cs <= 0;
               digit_count <= 3'b110;
+              state <= WAIT;
             end
 
             3'b110: begin // once send has been complete and CS is high again, switch state
@@ -405,6 +411,13 @@ module SPI_wrapper (
           Cs <= 1;
         end
       end // TRANSFER
+
+      WAIT: begin
+        if (send_reported == 1) begin
+          Cs <= 1;
+          state <= TRANSFER;
+        end
+      end
 
       DONE: begin // wait for the 100 Hz clock to go low again
         if (!clk_div) begin
