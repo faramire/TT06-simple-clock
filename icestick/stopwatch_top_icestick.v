@@ -367,7 +367,7 @@ module SPI_wrapper (
       end // IDLE
 
       TRANSFER: begin
-        //if (ready_reported == 1) begin // wait for TX ready
+        if (ready_reported == 1) begin // wait for TX ready
           case(digit_count)
 
             3'b000: begin // ces_0X
@@ -425,7 +425,9 @@ module SPI_wrapper (
 
             default:digit_count <= 3'b000;
           endcase
-        //end
+        end else if (send_reported == 1) begin // once data has been send, pull CS high
+          Cs <= 1;
+        end
       end // TRANSFER
 
       WAIT: begin
