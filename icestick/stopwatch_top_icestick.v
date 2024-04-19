@@ -294,7 +294,9 @@ module SPI_wrapper (
 
   output wire [2:0] state_wrapper
 );
-    
+  
+  assign state_wrapper = state;
+  
   // FSM
   reg [2:0] state;
   localparam SETUP_ON  = 3'b000;
@@ -312,8 +314,6 @@ module SPI_wrapper (
   reg reset_master;
   reg sent_ON;
   reg sent_BCD;
-
-  assign state_wrapper = state;
 
   always @(posedge clk) begin  // controlling FSM
     if (!res) begin // active low reset
@@ -333,6 +333,7 @@ module SPI_wrapper (
           if (ready_reported == 1) begin
             word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
             digit_count <= 3'b000;
+            wait_count <= 5'b0;
             Cs <= 0;
             sent_ON <= 1;
           end
@@ -362,7 +363,6 @@ module SPI_wrapper (
           digit_count <= 3'b000;
           wait_count <= 5'b0;
           state <= TRANSFER;
-          wait_count <= 5'b00000;
         end
       end // IDLE
 
