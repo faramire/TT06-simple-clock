@@ -297,10 +297,11 @@ module SPI_wrapper (
   reg [2:0] state;
   localparam SETUP_ON  = 3'b000;
   localparam SETUP_BCD = 3'b001;
-  localparam IDLE      = 3'b100;
-  localparam TRANSFER  = 3'b101;
-  localparam WAIT      = 3'b110;
-  localparam DONE      = 3'b111;
+  localparam IDLE      = 3'b010;
+  localparam CS_PAUSE  = 3'b011;
+  localparam TRANSFER  = 3'b100;
+  localparam WAIT      = 3'b101;
+  localparam DONE      = 3'b110;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
@@ -426,9 +427,19 @@ module SPI_wrapper (
 
       WAIT: begin
         if (wait_count == 4'b1111) begin
-          state <= TRANSFER;
+          state <= CS_PAUSE;
+          wait_count <= 4'b0;
           Cs <= 1;
         end else if (send_reported == 1'b1 || ready_reported) begin
+          wait_count <= wait_count + 1'b1;
+        end
+      end
+
+      CS_PAUSE: begin
+        if (wait_count == 4'b1111) begin
+          state <= TRANSFER;
+          wait_count <= 4'b0;
+        end else begin
           wait_count <= wait_count + 1'b1;
         end
       end
