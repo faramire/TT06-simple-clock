@@ -322,6 +322,7 @@ module SPI_wrapper (
       digit_count <= 3'b0;
       sent_ON <= 0;
       sent_BCD <= 0;
+      sent_SCN <= 0;
       state <= SETUP_ON;
     end
     case(state)
@@ -357,7 +358,7 @@ module SPI_wrapper (
 
       SETUP_SCN: begin // send a setup packet enabling 6 digits
         if (ready_reported == 1) begin
-          word_out <= 16'b0000_1011_0000_0101; // address = scan limit, data = BCD for all
+          word_out <= 16'b0000_1011_0000_1110; // address = scan limit, data = BCD for all
           digit_count <= 3'b000;
           Cs <= 0;
           sent_SCN <= 1;

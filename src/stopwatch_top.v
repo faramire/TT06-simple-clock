@@ -322,6 +322,7 @@ module SPI_wrapper (
       digit_count <= 3'b0;
       sent_ON <= 0;
       sent_BCD <= 0;
+      sent_SCN <= 0;
       state <= SETUP_ON;
     end
     case(state)
