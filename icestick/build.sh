@@ -5,4 +5,4 @@ arachne-pnr -d 1k -p icestick.pcf stopwatch.blif -o stopwatch.txt
 
 icepack stopwatch.txt stopwatch.bin
 
-iceprog  stopwatch.bin
+iceprog stopwatch.bin

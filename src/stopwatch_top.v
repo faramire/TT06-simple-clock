@@ -288,15 +288,6 @@ module SPI_wrapper (
   output reg  Cs,
   output wire Clk_SPI
 );
-    
-  // FSM
-  reg [2:0] state;
-  localparam SETUP_ON  = 3'b000;
-  localparam SETUP_BCD = 3'b001;
-  localparam IDLE      = 3'b100;
-  localparam TRANSFER  = 3'b101;
-  localparam WAIT      = 3'b110;
-  localparam DONE      = 3'b111;
 
   // FSM
   reg [2:0] state;

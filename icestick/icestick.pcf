@@ -16,7 +16,3 @@ set_io o_cs 113
 set_io o_sck 112
 set_io o_stopwatch_enabled 48
 set_io o_display_enabled 56
-
-set_io state0 44
-set_io state1 45
-set_io state2 47

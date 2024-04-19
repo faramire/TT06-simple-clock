@@ -13,9 +13,7 @@ module tt_um_faramire_stopwatch (
   output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
   input  wire       ena,      // will go high when the design is enabled
   input  wire       clk,      // clock
-  input  wire       rst_n,    // reset_n - low to reset
-
-  output wire [2:0] state_wrapper
+  input  wire       rst_n     // reset_n - low to reset
  );
   // All output pins must be assigned. If not used, assign to 0.
   assign uio_out = 0;
@@ -84,9 +82,7 @@ module tt_um_faramire_stopwatch (
     .ces_0X (w_ces_0X),
     .Mosi    (uo_out[0]), // MOSI on out 0
     .Cs      (uo_out[1]), //  CS  on out 1
-    .Clk_SPI (uo_out[2]),  //  CLK on out 3
-
-    .state_wrapper(state_wrapper)
+    .Clk_SPI (uo_out[2])  //  CLK on out 3
   );
 
 endmodule // tt_um_faramire_stopwatch
@@ -290,25 +286,19 @@ module SPI_wrapper (
 
   output wire Mosi,
   output reg  Cs,
-  output wire Clk_SPI,
-
-  output wire [2:0] state_wrapper
+  output wire Clk_SPI
 );
-  
-  assign state_wrapper = state;
-  
+
   // FSM
   reg [2:0] state;
   localparam SETUP_ON  = 3'b000;
   localparam SETUP_BCD = 3'b001;
   localparam IDLE      = 3'b100;
   localparam TRANSFER  = 3'b101;
-  localparam WAIT      = 3'b110;
-  localparam DONE      = 3'b111;
+  localparam DONE      = 3'b110;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
-  reg [4:0] wait_count;
   wire send_reported;
   wire ready_reported;
   reg reset_master;
@@ -333,7 +323,6 @@ module SPI_wrapper (
           if (ready_reported == 1) begin
             word_out <= 16'b0000_1100_0000_0001; // address = shutdown mode, data = device on
             digit_count <= 3'b000;
-            wait_count <= 5'b0;
             Cs <= 0;
             sent_ON <= 1;
           end
@@ -348,7 +337,6 @@ module SPI_wrapper (
         if (ready_reported == 1) begin
           word_out <= 16'b0000_1001_1111_1111; // address = decode mode, data = BCD for all
           digit_count <= 3'b000;
-          wait_count <= 5'b0;
           Cs <= 0;
           sent_BCD <= 1;
         end
@@ -359,9 +347,8 @@ module SPI_wrapper (
       end // SETUP
 
       IDLE: begin
-        if (clk_div & ena & ready_reported) begin // wait for the 100Hz clock to get high
+        if (clk_div & ena) begin // wait for the 100Hz clock to get high
           digit_count <= 3'b000;
-          wait_count <= 5'b0;
           state <= TRANSFER;
         end
       end // IDLE
@@ -373,71 +360,50 @@ module SPI_wrapper (
             3'b000: begin // ces_0X
               word_out <= {8'b0000_0001, 8'b0000_0000 | {4'b0000, ces_0X}}; // send the 16-bit word
               Cs <= 0; // pull CS low to initiate send
-              wait_count <= 5'b0;
               digit_count <= 3'b001; // advance the position counter
-              state <= WAIT;
             end
 
             3'b001: begin // ces_X0
               word_out <= {8'b0000_0010, 8'b0000_0000 | {4'b0000, ces_X0}};
               Cs <= 0;
-              wait_count <= 5'b0;
               digit_count <= 3'b010;
-              state <= WAIT;
             end
 
             3'b010: begin // sec_0X
               word_out <= {8'b0000_0011, 8'b1000_0000 | {4'b0000, sec_0X}};
               Cs <= 0;
-              wait_count <= 5'b0;
               digit_count <= 3'b011;
-              state <= WAIT;
             end
 
             3'b011: begin // sec_X0
               word_out <= {8'b0000_0100, 8'b0000_0000 | {5'b00000, sec_X0}};
               Cs <= 0;
-              wait_count <= 5'b0;
               digit_count <= 3'b100;
-              state <= WAIT;
             end
 
             3'b100: begin // min_0X
               word_out <= {8'b0000_0101, 8'b1000_0000 | {4'b0000, min_0X}};
               Cs <= 0;
-              wait_count <= 5'b0;
               digit_count <= 3'b101;
-              state <= WAIT;
             end
 
             3'b101: begin // min_X0
               word_out <= {8'b0000_0110, 8'b0000_0000 | {5'b00000, min_X0}};
               Cs <= 0;
-              wait_count <= 5'b0;
               digit_count <= 3'b110;
-              state <= WAIT;
             end
 
             3'b110: begin // once send has been complete and CS is high again, switch state
-              //wait_count <= 5'b0;
               state <= DONE;
             end
 
             default:digit_count <= 3'b000;
           endcase
+
         end else if (send_reported == 1) begin // once data has been send, pull CS high
           Cs <= 1;
         end
       end // TRANSFER
-
-      WAIT: begin
-        if (ready_reported == 1) begin
-          if (wait_count == 5'b11111) begin
-            state <= TRANSFER;
-          end
-          wait_count <= wait_count + 1;
-        end
-      end
 
       DONE: begin // wait for the 100 Hz clock to go low again
         if (!clk_div) begin
