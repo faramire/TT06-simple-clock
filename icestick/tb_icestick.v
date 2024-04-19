@@ -5,6 +5,7 @@
 
 `default_nettype none
 `include "stopwatch_top_icestick.v"
+`include "clockDividerIce.v"
 
 module ice_stopwatch(
   input CLK_IN,
@@ -17,13 +18,13 @@ module ice_stopwatch(
   output wire o_cs,
   output wire o_sck,
   output wire o_stopwatch_enabled,
-  output wire o_display_enabled
+  output wire o_display_enabled,
 
-  /* output wire l_mosi,
+  output wire l_mosi,
   output wire l_cs,
   output wire l_sck,
   output wire l_stopwatch_enabled,
-  output wire l_display_enabled */
+  output wire l_display_enabled
 );
 
   wire clk_tt;
@@ -51,31 +52,10 @@ module ice_stopwatch(
     .rst_n(i_board_reset)
   );
 
+  assign l_mosi = o_mosi;
+  assign l_cs = o_cs;
+  assign l_sck = o_sck;
+  assign l_stopwatch_enabled = o_stopwatch_enabled;
+  assign l_display_enabled = o_display_enabled;
+
 endmodule // ice_stopwatch
-
-module clockDividerIce (
-  input wire clk_in, // input clock 12 MHz
-  input wire ena,
-  input wire res,    // reset, active low
-  output reg clk_out // output clock 1 MHz
-);
-
-  reg[2:0] counter;
-  parameter div     = 6; // 12 MHz / 12 = 1 MHz, 50% duty cycle => 1/2 of that
-
-
-  always @(posedge clk_in) begin
-    if (!res) begin // reset
-      counter <= 3'b0;
-      clk_out <= 1'b0;
-    end else if (ena) begin
-      if (counter < (div-1)) begin    // count up
-        counter <= counter + 1;
-      end else begin                  // reset counter and invert output
-        counter <= 3'b0;
-        clk_out <= ~clk_out; 
-      end
-    end
-  end
-
-endmodule //clockDividerIce
