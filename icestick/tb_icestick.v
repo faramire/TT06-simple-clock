@@ -24,7 +24,11 @@ module ice_stopwatch(
   output wire l_cs,
   output wire l_sck,
   output wire l_stopwatch_enabled,
-  output wire l_display_enabled
+  output wire l_display_enabled,
+
+  output wire state0,
+  output wire state1,
+  output wire state2
 );
 
   wire clk_tt;
@@ -49,7 +53,8 @@ module ice_stopwatch(
     .uio_oe(),
     .ena(1'b1),
     .clk(clk_tt),
-    .rst_n(i_board_reset)
+    .rst_n(i_board_reset),
+    .state_wrapper({state0, state1, state2})
   );
 
   assign l_mosi = o_mosi;
