@@ -13,3 +13,6 @@ src/SPI_master_nandland.v
 src/SPI_master_faramire.v
 src/transfer.v
 *.v.out
+icestick/stopwatch.bin
+icestick/stopwatch.blif
+icestick/stopwatch.txt
