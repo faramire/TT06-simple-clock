@@ -299,10 +299,12 @@ module SPI_wrapper (
   localparam SETUP_BCD = 3'b001;
   localparam IDLE      = 3'b100;
   localparam TRANSFER  = 3'b101;
-  localparam DONE      = 3'b110;
+  localparam WAIT      = 3'b110;
+  localparam DONE      = 3'b111;
 
   reg [15:0] word_out;
   reg [2:0] digit_count;
+  reg [3:0] wait_count;
   wire send_reported;
   wire ready_reported;
   reg reset_master;
@@ -353,6 +355,7 @@ module SPI_wrapper (
       IDLE: begin
         if (clk_div & ena) begin // wait for the 100Hz clock to get high
           digit_count <= 3'b000;
+          wait_count <= 4'b0000;
           state <= TRANSFER;
         end
       end // IDLE
@@ -365,36 +368,48 @@ module SPI_wrapper (
               word_out <= {8'b0000_0001, 8'b0000_0000 | {4'b0000, ces_0X}}; // send the 16-bit word
               Cs <= 0; // pull CS low to initiate send
               digit_count <= 3'b001; // advance the position counter
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b001: begin // ces_X0
               word_out <= {8'b0000_0010, 8'b0000_0000 | {4'b0000, ces_X0}};
               Cs <= 0;
               digit_count <= 3'b010;
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b010: begin // sec_0X
               word_out <= {8'b0000_0011, 8'b1000_0000 | {4'b0000, sec_0X}};
               Cs <= 0;
               digit_count <= 3'b011;
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b011: begin // sec_X0
               word_out <= {8'b0000_0100, 8'b0000_0000 | {5'b00000, sec_X0}};
               Cs <= 0;
               digit_count <= 3'b100;
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b100: begin // min_0X
               word_out <= {8'b0000_0101, 8'b1000_0000 | {4'b0000, min_0X}};
               Cs <= 0;
               digit_count <= 3'b101;
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b101: begin // min_X0
               word_out <= {8'b0000_0110, 8'b0000_0000 | {5'b00000, min_X0}};
               Cs <= 0;
               digit_count <= 3'b110;
+              wait_count <= 4'b0000;
+              state <= WAIT;
             end
 
             3'b110: begin // once send has been complete and CS is high again, switch state
@@ -408,6 +423,18 @@ module SPI_wrapper (
           Cs <= 1;
         end
       end // TRANSFER
+
+      WAIT: begin
+        if (send_reported == 1'b1) begin
+          wait_count <= wait_count + 1'b1;
+          if (wait_count == 4'b1111) begin
+            state <= TRANSFER;
+          end else begin
+            wait_count <= wait_count + 1'b1;
+            Cs <= 1;
+          end
+        end
+      end
 
       DONE: begin // wait for the 100 Hz clock to go low again
         if (!clk_div) begin
