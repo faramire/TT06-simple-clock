@@ -48,6 +48,7 @@ module tt_um_faramire_stopwatch (
 
   controller controller1 ( // two latches for starting/stopping and lap times
     .res        (rst_n),
+    .clk        (clk),
     .start_stop (ui_in[0]),
     .lap_time   (ui_in[1]),
     .counter_enable (counter_enable),
@@ -116,24 +117,21 @@ endmodule //clockDivider
 
 module controller (
   input  wire res,            // reset, active low
+  input  wire clk,
   input  wire start_stop,     // impulse toggles counter_enable
   input  wire lap_time,       // impulse toggles display_enable
   output reg  counter_enable, // 
   output reg  display_enable  //
 );
 
-  always @(posedge start_stop) begin
-    if (!res)
+  always @(posedge clk) begin
+    if (!res) begin
       counter_enable <= 1'b0;
-    else
-      counter_enable <= ~counter_enable;
-  end
-
-  always @(posedge lap_time) begin
-    if (!res)
       display_enable <= 1'b1;
-    else
+    end else begin
+      counter_enable <= ~counter_enable;
       display_enable <= ~display_enable;
+    end
   end
   
 endmodule // controller
