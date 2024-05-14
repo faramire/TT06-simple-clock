@@ -9,8 +9,6 @@ With 3 buttons, a stopwatch with 1/100th second precision can be started and sto
 
 For more, read the [Tiny Tapeout documentation](docs/info.md)
 
-[SPI Master courtesty of Russell Merrick aka nandland](https://github.com/nandland/spi-master).
-
 ## How to use
 
 You will need the Tiny Tapeout 6 PCB/chip. See the [Tiny Tapeout documentation](docs/info.md).
